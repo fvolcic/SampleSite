@@ -2,10 +2,16 @@
 import { useId, useState } from 'react';
 import './App.css';
 
+import qs from 'querystring';
+
+var client_id = '231521e53a6d4fe1b1729d4037b2efb2'; // Your client id
+var client_secret = '627eb37c52a4409d861273d9ac6d4768'; // Your secret
+var redirect_uri = 'http://localhost:3000/'; // Your redirect uri
+
+var stateKey = 'spotify_auth_state';
+
 var wifiSSID; 
 var wifiPASS;
-var spotifyUsername; 
-var spotifyPassword; 
 
 function updateWifiSSID(value) {
   wifiSSID = value;
@@ -23,39 +29,44 @@ function updateWifiPASS(value) {
   wifiPASS = value;
 }
 
-function updateSpotifyUsername(value) {
-  spotifyUsername = value;
-}
-
-function getSpotifyUsername() {
-  return spotifyUsername;
-}
-
-function getSpotifyPassword() {
-  return spotifyPassword;
-}
-
-function updateSpotifyPassword(value) {
-  spotifyPassword = value;
-}
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
         <p>
-          Fill in the data below to get started!
+          Fill in the data below to get started with your spotify album frame!
         </p>
-    
+
+        <SpotifyLogin></SpotifyLogin>    
         <Input updateValue={updateWifiSSID} getValue={getWifiSSID} placeholder="Wifi SSID"/>
         <Input updateValue={updateWifiPASS} getValue={getWifiPASS} placeholder="Wifi Password"/>
-        <Input updateValue={updateSpotifyUsername} getValue={getSpotifyUsername} placeholder="Spotify Username"/>
-        <Input updateValue={updateSpotifyPassword} getValue={getSpotifyPassword} placeholder="Spotify Password"/>
 
         <button onClick={onDownloadClick}>Download</button>
       </header>
     </div>
   );
+}
+
+function SpotifyLogin(props){
+  return (
+    <div>
+      <button onClick={onSpotifyLogin}>Login with spotify</button>
+    </div>
+  );
+}
+
+function onSpotifyLogin() {
+  var scope = ''; 
+  var state = generateRandomString(16); 
+  window.location.href = 'https://accounts.spotify.com/authorize?' + 
+  qs.stringify({
+    response_type: 'code',
+    client_id: client_id,
+    scope: scope,
+    redirect_uri: redirect_uri,
+    state: state
+  });
 }
 
 function Input(props) {
@@ -72,11 +83,11 @@ function Input(props) {
 }
 
 function onDownloadClick() {
-  download('credentials.txt', generateDownloadDocument(getWifiPASS(), getWifiSSID(), getSpotifyUsername(), getSpotifyPassword()));
+  download('credentials.txt', generateDownloadDocument(getWifiPASS(), getWifiSSID()));
 }
 
-function generateDownloadDocument(wifiPass, wifiSSID, spotifyUsername, spotifyPassword) {
-  var text = 'wifi_pass=' + wifiPass + '\nwifi_ssid=' + wifiSSID + '\nspotify_username=' + spotifyUsername + '\nspotify_password=' + spotifyPassword;
+function generateDownloadDocument(wifiPass, wifiSSID) {
+  var text = 'wifi_pass=' + wifiPass + '\nwifi_ssid=' + wifiSSID;
   return text;
 }
 
@@ -92,5 +103,15 @@ function download(filename, text) {
 
   document.body.removeChild(element);
 }
+
+var generateRandomString = function(length) {
+  var text = '';
+  var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  for (var i = 0; i < length; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
+};
 
 export default App;
